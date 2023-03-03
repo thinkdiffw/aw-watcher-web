@@ -35,6 +35,12 @@ button {
   border: 1px solid #DDD;
 }
 
+#hostname-set-btn {
+  color: #333333;
+  background-color: #EEE;
+  border: 1px solid #DDD;
+}
+
 #status-consent-btn {
   display: none;
 }

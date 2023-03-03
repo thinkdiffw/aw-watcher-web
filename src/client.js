@@ -68,9 +68,15 @@ var client = {
     // https://stackoverflow.com/questions/28223087/how-can-i-allow-firefox-or-chrome-to-read-a-pcs-hostname-or-other-assignable
     var bucket_id = this.getBucketId();
     var eventtype = "web.tab.current";
-    var hostname = "unknown";
 
     function attempt() {
+      var hostname = "unknown";
+      chrome.storage.local.get("hostname", (obj) => {
+        console.log('hostname: ', obj.hostname)
+        if (obj.hostname) {
+          hostname = obj.hostname;
+        }
+      });
       return client.awc.ensureBucket(bucket_id, eventtype, hostname)
         .catch( (err) => {
           console.error("Failed to create bucket, retrying...");

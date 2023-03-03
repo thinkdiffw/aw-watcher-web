@@ -1,7 +1,7 @@
 "use strict";
 
 function renderStatus() {
-  chrome.storage.local.get(["lastSync", "lastSyncSuccess", "testing", "baseURL", "enabled"], function(obj) {
+  chrome.storage.local.get(["lastSync", "lastSyncSuccess", "testing", "baseURL", "enabled", "hostname"], function (obj) {
     // Enabled checkbox
     let enabledCheckbox = document.getElementById('status-enabled-checkbox');
     enabledCheckbox.checked = obj.enabled;
@@ -39,6 +39,7 @@ function renderStatus() {
 
     // Set webUI button link
     document.getElementById('webui-link').href = obj.baseURL;
+    document.getElementById("hostname").value = obj.hostname ? obj.hostname : "unknown";
   });
 }
 
@@ -46,13 +47,21 @@ function domListeners() {
   let enabled_checkbox = document.getElementById('status-enabled-checkbox');
   enabled_checkbox.addEventListener("change", (obj) => {
     let enabled = obj.srcElement.checked;
-    chrome.runtime.sendMessage({enabled: enabled}, function(response) {});
+    chrome.runtime.sendMessage({enabled: enabled}, function (response) {
+    });
   });
   let consent_button = document.getElementById('status-consent-btn');
   consent_button.addEventListener('click', () => {
     const url = chrome.runtime.getURL("../static/consent.html");
     chrome.windows.create({ url, type: "popup", height: 420, width: 416, });
   });
+  let hostnameSetButton = document.getElementById('hostname-set-btn');
+  hostnameSetButton.addEventListener("click", () => {
+    let newHostname = document.getElementById("hostname").value;
+    if (newHostname) {
+      chrome.storage.local.set({"hostname": newHostname})
+    }
+  })
 }
 
 document.addEventListener('DOMContentLoaded', function() {
