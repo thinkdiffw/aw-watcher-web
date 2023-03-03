@@ -22,6 +22,28 @@ function logHttpError(error) {
   }
 }
 
+function getLocalStorage(key) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(key, (result) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve(result[key]);
+      }
+    });
+  });
+}
+
+async function getHostname() {
+  try {
+    const result = await getLocalStorage('hostname');
+    return result || 'unknown';
+  } catch (error) {
+    console.error(error);
+    return 'unknown';
+  }
+}
+
 var client = {
   testing: null,
   awc: null,
@@ -61,32 +83,26 @@ var client = {
     });
   },
 
-  createBucket: function(){
+  createBucket: async function () {
     if (this.testing === null)
       return;
     // TODO: We might want to get the hostname somehow, maybe like this:
     // https://stackoverflow.com/questions/28223087/how-can-i-allow-firefox-or-chrome-to-read-a-pcs-hostname-or-other-assignable
     var bucket_id = this.getBucketId();
     var eventtype = "web.tab.current";
+    var hostname = await getHostname();
 
     function attempt() {
-      var hostname = "unknown";
-      chrome.storage.local.get("hostname", (obj) => {
-        console.log('hostname: ', obj.hostname)
-        if (obj.hostname) {
-          hostname = obj.hostname;
-        }
-      });
       return client.awc.ensureBucket(bucket_id, eventtype, hostname)
-        .catch( (err) => {
-          console.error("Failed to create bucket, retrying...");
-          logHttpError(err);
-          return Promise.reject(err);
-        }
-      );
+        .catch((err) => {
+            console.error("Failed to create bucket, retrying...");
+            logHttpError(err);
+            return Promise.reject(err);
+          }
+        );
     }
 
-    retry(attempt, { forever: true });
+    retry(attempt, {forever: true});
   },
 
   sendHeartbeat: function(timestamp, data, pulsetime) {
